@@ -1,0 +1,307 @@
+
+(defun buscaGenerica (l x)
+    (IF (NULL (Car l ))
+        NIL
+        (IF (eql (car l) x)
+            T
+            (IF (atom (car l))
+                (buscaGenerica (cdr l) x)
+				(OR (buscaGenerica (car l) x) (buscaGenerica (cdr l) x))
+            )
+        )
+     )
+)
+
+(defun MUDANCA-LOCAL-MATRICULA (ALUNOS DISCIPLINA TURMA BD)
+    (IF (NULL BD)
+        NIL
+     (IF (eql (caar BD) DISCIPLINA )  
+        (IF (eql TURMA 1) 
+        	(append (CONS (addElemento 'T1 ALUNOS  (CAR BD)) NIL ) (cdr BD))
+            (append (CONS (addElemento 'T2 ALUNOS  (CAR BD)) NIL ) (cdr BD))
+        )
+        (APPEND (CONS (CAR BD) NIL) (MUDANCA-LOCAL-MATRICULA ALUNOS DISCIPLINA TURMA (CDR BD)))
+     )
+
+    )
+)
+
+(defun MATRICULAR (ALUNOS DISCIPLINAS TURMA BD)
+    (IF (zerop (LENGTH DISCIPLINAS)) 
+        (IF (NULL BD)
+            NIL
+            BD
+        )
+        (IF (buscaGenerica BD (car DISCIPLINAS))
+            (MATRICULAR ALUNOS (CDR DISCIPLINAS) TURMA (MUDANCA-LOCAL-MATRICULA ALUNOS (CAR DISCIPLINAS) TURMA BD) )
+            (MATRICULAR ALUNOS DISCIPLINAS TURMA  (APPEND BD (addBloco BD (CAR DISCIPLINAS) )))
+        )
+
+    )
+)
+(defun MUDANCA-LOCAL-VINCULAR (PROFESSORES DISCIPLINA  BD)
+    (IF (NULL BD)
+        NIL
+     (IF (eql (caar BD) DISCIPLINA )  
+        (append (CONS (addElemento 'PROFESSORES PROFESSORES  (CAR BD)) NIL ) (cdr BD))
+        (APPEND (CONS (CAR BD) NIL) (MUDANCA-LOCAL-VINCULAR PROFESSORES DISCIPLINA (CDR BD)))
+     )
+
+    )
+)
+(defun VINCULAR (PROFESSORES DISCIPLINAS BD )
+	(IF (zerop (LENGTH DISCIPLINAS)) 
+           (IF (NULL BD)
+            NIL
+            BD
+        )
+		(IF (buscaGenerica BD (car DISCIPLINAS))
+			 (VINCULAR PROFESSORES (CDR DISCIPLINAS) (MUDANCA-LOCAL-VINCULAR PROFESSORES (CAR DISCIPLINAS) BD) )
+             (VINCULAR PROFESSORES DISCIPLINAS (APPEND BD (addBloco BD (CAR DISCIPLINAS) )))
+		)
+	 )
+
+)
+
+
+(defun addBloco (BD DISCIPLINAS) 
+   (cons (cons DISCIPLINAS (cons (cons 'PROFESSORES NIL )(cons (cons 'T1 NIL)(cons (cons 'T2 NIL) NIL)) )) NIL)
+)
+
+
+(defun addElemento (x y lista)
+  (cond
+    ; lista vazia
+    ((null lista) Nil)
+    ;elemento da lista e uma lista
+    ((consp (car lista))
+      (cons (addElemento x y (car lista)) (addElemento x y (cdr lista)))
+    )
+    ; elemento da lista e um atomo igual a x
+    ((equal (car lista) x)
+    (remove-duplicates (append (append (cons x nil) 
+    (addElemento x y (cdr lista)) ) y) ))
+    ; elemento da lista e um atomo diferente de x
+    (t
+    (cons (car lista) (addElemento x y (cdr lista)))
+    )
+   )
+)
+; funcao nativa, apenas aqui para estudar seu funcionamento
+
+(defun remove-duplicates (lista)
+   (cond ((null lista) nil)
+         ((member (car lista) (cdr lista))
+          (remove-duplicates (cdr lista)))
+         (t (cons (car lista)
+                  (remove-duplicates (cdr lista))))))
+                  
+ ( defun ALUNOS? (BD)
+    (IF (NULL (Car BD ))
+        NIL
+        (IF (OR (eql (car BD) 'T1) (eql (car BD) 'T2) )
+            (CDR BD)
+            (IF (atom (car BD))
+                (ALUNOS? (cdr BD))
+				(remove-duplicates (APPEND (ALUNOS? (car BD)) (ALUNOS? (cdr BD))))
+            )
+
+        )
+
+     )
+
+)
+
+( defun PROFESSORES? (BD)
+    (IF (NULL (CAR BD ))
+        NIL
+        (IF (eql (car BD) 'PROFESSORES) 
+            (CDR BD)
+            (IF (atom (car BD))
+                (PROFESSORES? (cdr BD))
+				(remove-duplicates (APPEND (PROFESSORES? (car BD)) (PROFESSORES? (cdr BD))))
+            )
+
+        )
+
+     )
+)
+( defun DISCIPLINAS? (BD)
+    (IF (NULL (CAR BD ))
+        NIL
+        (IF (NULL (caar BD)) 
+            NIL
+            (CONS (CAAR BD) (DISCIPLINAS? (CDR BD)))
+        )
+     )
+)
+(defun MATRICULADOS? (DISCIPLINA TURMA BD)
+    (IF (NULL (CAR BD))
+        NIL
+        (IF (BUSCAGENERICA BD DISCIPLINA)
+            (IF (eql (caar BD) DISCIPLINA) 
+                (IF (= TURMA 1 )
+                   (CDR (CADDAR BD) )
+                   (CDAR (CDDDAR BD) )
+                )
+                (MATRICULADOS? DISCIPLINA TURMA (CDR BD))
+            )
+            NIL
+            
+        )
+    )
+
+)
+
+(defun VINCULADOS? (DISCIPLINA BD)
+    (IF (NULL (CAR BD))
+        NIL
+        (IF (BUSCAGENERICA BD DISCIPLINA)
+           (IF (eql (caar BD) DISCIPLINA) 
+                (CDR (CADAR BD))
+                (VINCULADOS? DISCIPLINA (CDR BD))
+            ) 
+            NIL
+        )
+    )
+)
+(defun eliminaElemento (X TURMA BD )
+    (IF (ZEROP (LENGTH X))
+        (IF (NULL BD)
+            NIL
+            BD
+        )
+        (IF (BUSCAGENERICA BD (CAR X))
+            (IF (ATOM (CAR BD))
+                (IF (EQL (CAR BD) (CAR X) ) 
+                    (ELIMINAELEMENTO (CDR X) TURMA (CDR BD))
+                    (CONS (CAR BD) (ELIMINAELEMENTO X TURMA (CDR BD)))
+                )
+                (IF (AND (EQL (CAAR BD) 'T1) (= TURMA 1))
+                    (CONS (ELIMINAELEMENTO X TURMA (CAR BD)) (CDR BD))
+                    (IF (AND (EQL (CAAR BD) 'T2) (= TURMA 2))
+                        (CONS (ELIMINAELEMENTO X TURMA (CAR BD)) (CDR BD))
+                        (CONS (CAR BD) (ELIMINAELEMENTO X TURMA (CDR BD)))
+                    )
+                )
+            )
+         (ELIMINAELEMENTO (CDR X) TURMA BD)   
+        )
+    )
+)
+
+(defun CANCELAR-MATRICULA (ALUNOS DISCIPLINAS TURMA BD)
+  (IF (zerop (LENGTH DISCIPLINAS)) 
+   (IF (NULL BD)
+        NIL
+        BD
+   )
+        (IF (buscaGenerica BD (car DISCIPLINAS))
+            (CANCELAR-MATRICULA ALUNOS (CDR DISCIPLINAS) TURMA (MUDANCA-LOCAL ALUNOS (CAR DISCIPLINAS) TURMA BD ) )
+            (CANCELAR-MATRICULA ALUNOS (CDR DISCIPLINAS) TURMA BD)
+        )
+
+    )
+)
+
+(defun MUDANCA-LOCAL (ALUNOS DISCIPLINA TURMA BD)
+    (IF (NULL BD)
+        NIL
+     (IF (eql (caar BD) DISCIPLINA )  
+        (APPEND (CONFERE-EXISTENCIA (CONS (eliminaElemento ALUNOS TURMA (CAR BD) ) NIL )) (CDR BD))
+        (APPEND (CONS (CAR BD) NIL) (MUDANCA-LOCAL ALUNOS DISCIPLINA TURMA (CDR BD))
+     )
+
+    )
+)
+)
+(DEFUN CONFERE-EXISTENCIA (LISTA)
+    (IF (NULL LISTA)
+        NIL
+        (IF (AND (NULL (CDADAR LISTA)) (NULL (CDR (CADDAR LISTA))) (NULL (CDAR (CDDDAR LISTA)) ) ) 
+            NIL
+            LISTA
+        )
+    
+    )
+
+)
+
+(defun REMOVER-VINCULO (PROFESSORES DISCIPLINAS BD)
+  (IF (zerop (LENGTH DISCIPLINAS)) 
+   (IF (NULL BD)
+        NIL
+        BD
+   )
+        (IF (buscaGenerica BD (car DISCIPLINAS))
+            (REMOVER-VINCULO PROFESSORES (CDR DISCIPLINAS) (MUDANCA-LOCAL-PROFESSORES PROFESSORES (CAR DISCIPLINAS) BD ) )
+            (REMOVER-VINCULO PROFESSORES (CDR DISCIPLINAS) BD)
+        )
+
+    )
+)
+(defun MUDANCA-LOCAL-PROFESSORES (PROFESSORES DISCIPLINA BD)
+    (IF (NULL BD)
+        NIL
+     (IF (eql (caar BD) DISCIPLINA )  
+        (APPEND (CONFERE-EXISTENCIA (CONS (ELIMINA-PROFESSOR PROFESSORES (CAR BD) ) NIL )) (CDR BD))
+        (APPEND (CONS (CAR BD) NIL) (MUDANCA-LOCAL-PROFESSORES PROFESSORES DISCIPLINA (CDR BD))
+     )
+
+    )
+)
+)
+
+(defun ELIMINA-PROFESSOR (X BD )
+    (IF (ZEROP (LENGTH X))
+        (IF (NULL BD)
+            NIL
+            BD
+        )
+        (IF (BUSCAGENERICA BD (CAR X))
+            (IF (ATOM (CAR BD))
+                (IF (EQL (CAR BD) (CAR X) ) 
+                    (ELIMINA-PROFESSOR  (CDR X) (CDR BD))
+                    (CONS (CAR BD) (ELIMINA-PROFESSOR  X (CDR BD)))
+                )
+                (IF (EQL (CAAR BD) 'PROFESSORES)
+                    (CONS (ELIMINA-PROFESSOR  X (CAR BD)) (CDR BD))
+                    (CONS (CAR BD) (ELIMINA-PROFESSOR X (CDR BD)))
+                )
+            )
+         (ELIMINA-PROFESSOR (CDR X) BD)   
+        )
+    )
+)
+
+(DEFUN CURSA? (ALUNO BD)
+    (IF (NULL BD)
+        NIL
+        (TIRA-NIL (APPEND (CONS (VERIFICA-EXISTENCIA ALUNO (CAR BD)) NIL) (CURSA? ALUNO (CDR BD)) )
+    )
+)
+)
+
+(DEFUN VERIFICA-EXISTENCIA (ALUNO BD)
+        (cond
+            ((NULL BD) NIL)
+            ((BUSCAGENERICA BD ALUNO) (CAR BD))
+        )
+)
+(DEFUN TIRA-NIL (LISTA)
+(IF (NULL LISTA)
+    NIL
+    (IF (EQL (CAR LISTA) NIL)
+        (TIRA-NIL (CDR LISTA))
+        (APPEND (CONS (CAR LISTA) NIL) (TIRA-NIL (CDR LISTA)))
+    )
+)
+)
+
+(DEFUN MINISTRA? (PROFESSOR BD)
+    (IF (NULL BD)
+        NIL
+        (TIRA-NIL (APPEND (CONS (VERIFICA-EXISTENCIA PROFESSOR (CAR BD)) NIL) (MINISTRA? PROFESSOR (CDR BD)) )
+    )
+)
+)
